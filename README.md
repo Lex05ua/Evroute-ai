@@ -283,9 +283,9 @@ This project is licensed under the MIT License — see [LICENSE](LICENSE) for de
 
 ## 👤 Author
 
-**Your Name**  
+**Oleksii Vielkov**  
 Bachelor's Diploma Project — Department of Computer Science  
-Slovak University of Technology, Bratislava — 2025
+Slovak University of Technology, Kosice — 2025
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0077B5?style=flat&logo=linkedin)](https://linkedin.com/in/YOUR_USERNAME)
-[![GitHub](https://img.shields.io/badge/GitHub-Follow-181717?style=flat&logo=github)](https://github.com/YOUR_USERNAME)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0077B5?style=flat&logo=linkedin)](https://www.linkedin.com/in/oleksii-vielkov-952548242/)
+[![GitHub](https://img.shields.io/badge/GitHub-Follow-181717?style=flat&logo=github)](https://github.com/Lex05ua)
