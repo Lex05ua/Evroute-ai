@@ -5,7 +5,7 @@ Thank you for your interest in contributing! Here's how to get started.
 ## Development Setup
 
 1. Fork the repository
-2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/evroute-ai.git`
+2. Clone your fork: `git clone https://github.com/Lex05ua/evroute-ai.git`
 3. Follow the setup steps in [README.md](README.md)
 
 ## Reporting Issues
