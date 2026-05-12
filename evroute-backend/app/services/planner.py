@@ -1,9 +1,7 @@
 """
 Core EV Route Planner.
-Orchestrates: geocoding → routing → charging station selection → battery simulation → AI recommendation.
 """
 import math
-from typing import Optional
 from fastapi import HTTPException
 
 from app.services.routing import geocode, get_route
@@ -13,15 +11,10 @@ from app.schemas.route import RouteRequest, RouteResult, ChargingStop, RouteStep
 
 
 def _decode_geometry(geometry) -> list[list[float]]:
-    """
-    ORS returns geometry as encoded polyline string or GeoJSON coords.
-    Try to handle both; fall back to empty list.
-    """
     if geometry is None:
         return []
     if isinstance(geometry, list):
-        return geometry  # already [[lon, lat], ...]
-    # Encoded polyline — decode it
+        return geometry
     try:
         import polyline
         decoded = polyline.decode(geometry)
@@ -30,43 +23,40 @@ def _decode_geometry(geometry) -> list[list[float]]:
         return []
 
 
-def _sample_waypoints(geometry: list[list[float]], n: int = 10) -> list[tuple[float, float]]:
-    """Sample n evenly-spaced [lon, lat] points from route geometry as (lat, lon) tuples."""
+def _sample_waypoints(geometry: list[list[float]], n: int = 20) -> list[tuple[float, float]]:
     if not geometry:
         return []
     step = max(1, len(geometry) // n)
     sampled = geometry[::step]
-    return [(pt[1], pt[0]) for pt in sampled]  # convert to (lat, lon)
+    # Всегда добавляем первую и последнюю точку
+    result = [(pt[1], pt[0]) for pt in sampled]
+    first = (geometry[0][1], geometry[0][0])
+    last = (geometry[-1][1], geometry[-1][0])
+    if result[0] != first:
+        result.insert(0, first)
+    if result[-1] != last:
+        result.append(last)
+    return result
 
 
 def _simulate_battery(
-    segments_km: list[float],
+    total_km: float,
     battery_kwh: float,
     battery_pct: float,
     efficiency_wh_per_km: float,
     stations: list[dict],
     station_positions_km: list[float],
 ) -> tuple[list[dict], float]:
-    """
-    Simulate battery state along the route.
-    Returns (enriched_stations, final_battery_pct).
-    
-    stations: ordered list of charging stops
-    station_positions_km: cumulative km position of each stop
-    """
     current_kwh = battery_kwh * (battery_pct / 100)
-    total_km = sum(segments_km)
     enriched = []
-
     prev_km = 0.0
-    for i, (station, pos_km) in enumerate(zip(stations, station_positions_km)):
-        # Drive to this stop
+
+    for station, pos_km in zip(stations, station_positions_km):
         drive_km = pos_km - prev_km
         consumed_kwh = drive_km * efficiency_wh_per_km / 1000
         current_kwh = max(0.0, current_kwh - consumed_kwh)
         arrival_pct = round(current_kwh / battery_kwh * 100, 1)
 
-        # Charge to 80% (optimal for battery health & speed)
         target_kwh = battery_kwh * 0.80
         charge_needed_kwh = max(0.0, target_kwh - current_kwh)
         power_kw = station["power_kw"]
@@ -85,7 +75,6 @@ def _simulate_battery(
         })
         prev_km = pos_km
 
-    # Drive remaining to destination
     remaining_km = total_km - prev_km
     consumed_kwh = remaining_km * efficiency_wh_per_km / 1000
     current_kwh = max(0.0, current_kwh - consumed_kwh)
@@ -102,19 +91,15 @@ def _select_stops(
     battery_pct: float,
     efficiency_wh_per_km: float,
 ) -> tuple[list[dict], list[float]]:
-    """
-    Greedy algorithm: select charging stops needed to complete the route.
-    Returns (selected_stations, their_km_positions).
-    """
-    max_range_km = (battery_kwh * battery_pct / 100) / (efficiency_wh_per_km / 1000)
+
+    current_kwh = battery_kwh * (battery_pct / 100)
+    max_range_km = current_kwh / (efficiency_wh_per_km / 1000)
     full_range_km = battery_kwh / (efficiency_wh_per_km / 1000)
-    safe_range_km = full_range_km * 0.85  # keep 15% buffer
+    safe_range_km = full_range_km * 0.80
+    min_buffer_km = full_range_km * 0.15
 
-    # Map each station to its approximate km position along the route
-    # Use simple projection: find the closest waypoint index, then scale by total_km
-    if not route_waypoints:
-        return [], []
-
+    # Назначаем каждой станции позицию вдоль маршрута
+    # Используем ближайшую точку waypoint
     def station_km_position(station: dict) -> float:
         slat, slon = station["lat"], station["lon"]
         best_idx = 0
@@ -126,56 +111,62 @@ def _select_stops(
                 best_idx = idx
         return (best_idx / max(1, len(route_waypoints) - 1)) * total_km
 
-    # Annotate stations with km position and sort
+    # Аннотируем и сортируем
     annotated = []
     for s in stations:
         km = station_km_position(s)
-        if 2.0 < km < total_km - 2.0:  # not at start/end
+        if 5.0 < km < total_km - 5.0:
             annotated.append((km, s))
     annotated.sort(key=lambda x: x[0])
 
-    # Greedy selection
+    print(f"DEBUG annotated stations: {len(annotated)}")
+    for km, s in annotated[:5]:
+        print(f"  km={km:.0f} | {s['name']}")
+
     selected = []
     selected_km = []
-    current_km = 0.0
+    current_pos_km = 0.0
     current_range = max_range_km
 
-    for km, station in annotated:
-        drive_km = km - current_km
-        if drive_km <= 0:
-            continue
+    for _ in range(10):  # максимум 10 остановок
+        remaining = total_km - current_pos_km
 
-        if current_range - drive_km < safe_range_km * 0.15:
-            # Need to stop here
-            selected.append(station)
-            selected_km.append(km)
-            current_range = safe_range_km  # after charging to 80%
-            current_km = km
+        # Можем доехать до финиша?
+        if current_range >= remaining + min_buffer_km:
+            print(f"DEBUG: can reach destination, range={current_range:.0f}km remaining={remaining:.0f}km")
+            break
 
-        # Can we reach destination without this stop?
-        remaining = total_km - current_km
-        if current_range >= remaining + safe_range_km * 0.15:
-            break  # no more stops needed
+        # Ищем все станции которые мы можем достичь
+        # с учётом минимального буфера
+        reachable = [
+            (km, s) for km, s in annotated
+            if current_pos_km + 5 < km <= current_pos_km + current_range - min_buffer_km
+        ]
 
-    # Final check: if we still can't reach, force the best available stop
-    if not selected:
-        remaining = total_km
-        if max_range_km < remaining:
-            # Pick the station ~70% of our range from start
-            ideal_km = max_range_km * 0.7
-            best = min(annotated, key=lambda x: abs(x[0] - ideal_km), default=(None, None))
-            if best[1] is not None:
-                selected = [best[1]]
-                selected_km = [best[0]]
+        if not reachable:
+            # Буфер недостижим — берём просто всё что достижимо
+            reachable = [
+                (km, s) for km, s in annotated
+                if current_pos_km + 5 < km <= current_pos_km + current_range
+            ]
+
+        if not reachable:
+            print(f"DEBUG: no reachable stations from pos={current_pos_km:.0f}km range={current_range:.0f}km")
+            break
+
+        # Берём самую дальнюю достижимую станцию
+        km, best = reachable[-1]
+
+        selected.append(best)
+        selected_km.append(km)
+        current_range = safe_range_km  # после зарядки до 80%
+        current_pos_km = km
+        print(f"DEBUG: selected stop at {km:.0f}km: {best['name']}")
 
     return selected, selected_km
 
-
 async def plan_route(request: RouteRequest) -> RouteResult:
-    """
-    Main route planning function.
-    """
-    # 1. Geocode origin and destination
+    # 1. Геокодинг
     origin_coords = await geocode(request.origin)
     if not origin_coords:
         raise HTTPException(status_code=400, detail=f"Could not geocode origin: {request.origin}")
@@ -187,48 +178,72 @@ async def plan_route(request: RouteRequest) -> RouteResult:
     origin_lat, origin_lon = origin_coords
     dest_lat, dest_lon = dest_coords
 
-    # 2. Get initial route (no waypoints yet)
+    # 2. Маршрут
     route_data = await get_route(origin_lat, origin_lon, dest_lat, dest_lon)
     total_km = route_data["distance_km"]
     drive_time_min = route_data["duration_min"]
 
-    # 3. Check if we can make it without stops
+    # 3. Запас хода
     current_kwh = request.battery_capacity_kwh * (request.battery_level_pct / 100)
     max_range_km = current_kwh / (request.efficiency_wh_per_km / 1000)
 
-    # 4. Fetch charging stations along route
+    full_range_km = request.battery_capacity_kwh / (request.efficiency_wh_per_km / 1000)
+    min_buffer_km = full_range_km * 0.15
+
+    # 4. Геометрия
     geometry = route_data.get("geometry", [])
-    if isinstance(geometry, str):
-        # Encoded polyline — try to decode
-        coords = _decode_geometry(geometry)
+    print(f"DEBUG geometry type: {type(geometry)}, value preview: {str(geometry)[:100]}")
+
+    if isinstance(geometry, str) and geometry:
+        # Encoded polyline от ORS — декодируем
+        try:
+            import polyline as polyline_lib
+            decoded = polyline_lib.decode(geometry)
+            coords = [[lon, lat] for lat, lon in decoded]
+            print(f"DEBUG decoded polyline: {len(coords)} points")
+        except Exception as e:
+            print(f"DEBUG polyline decode error: {e}")
+            coords = []
     elif isinstance(geometry, dict) and "coordinates" in geometry:
         coords = geometry["coordinates"]
+        print(f"DEBUG geojson coords: {len(coords)} points")
+    elif isinstance(geometry, list) and geometry:
+        coords = geometry
+        print(f"DEBUG list coords: {len(coords)} points")
     else:
         coords = []
+        print(f"DEBUG: no geometry available")
 
-    waypoints = _sample_waypoints(coords, n=12)
-
-    # If geometry unavailable, use start/end/midpoint
+    waypoints = _sample_waypoints(coords, n=20)
+    print(f"DEBUG geometry points: {len(coords)}, waypoints: {len(waypoints)}")
+    if waypoints:
+        print(f"  first waypoint: {waypoints[0]}")
+        print(f"  middle waypoint: {waypoints[len(waypoints) // 2]}")
+        print(f"  last waypoint: {waypoints[-1]}")
     if not waypoints:
         mid_lat = (origin_lat + dest_lat) / 2
         mid_lon = (origin_lon + dest_lon) / 2
         waypoints = [(origin_lat, origin_lon), (mid_lat, mid_lon), (dest_lat, dest_lon)]
 
-    stations = []
+    # 5. Нужны ли остановки?
+    # ИСПРАВЛЕНИЕ: проверяем реальный запас хода vs расстояние + буфер
+    need_charging = max_range_km < (total_km + min_buffer_km)
+    print(
+        f"DEBUG: battery={request.battery_level_pct}%, range={max_range_km:.0f}km, distance={total_km:.0f}km, need_charging={need_charging}")
+
     selected_stops = []
     selected_km = []
-    charging_time_min = 0.0
-    estimated_cost_eur = 0.0
 
-    if max_range_km < total_km * 0.9:
-        # Need charging — fetch stations
+    if need_charging:
         try:
             stations = await fetch_stations_along_route(
                 waypoints,
-                search_radius_km=15.0,
-                max_power_kw=50.0,
+                search_radius_km=25.0,  # увеличили радиус
+                max_power_kw=22.0,
             )
-        except Exception:
+            print(f"DEBUG stations found: {len(stations)}")
+        except Exception as e:
+            print(f"DEBUG stations error: {e}")
             stations = []
 
         if stations:
@@ -240,10 +255,13 @@ async def plan_route(request: RouteRequest) -> RouteResult:
                 request.battery_level_pct,
                 request.efficiency_wh_per_km,
             )
+            print(f"DEBUG selected stops: {len(selected_stops)} at km positions: {selected_km}")
+        else:
+            print("DEBUG: no stations found at all!")
 
-    # 5. Battery simulation
+    # 6. Симуляция батареи
     enriched_stops, arrival_pct = _simulate_battery(
-        segments_km=[total_km],
+        total_km=total_km,
         battery_kwh=request.battery_capacity_kwh,
         battery_pct=request.battery_level_pct,
         efficiency_wh_per_km=request.efficiency_wh_per_km,
@@ -251,13 +269,12 @@ async def plan_route(request: RouteRequest) -> RouteResult:
         station_positions_km=selected_km,
     )
 
-    for stop in enriched_stops:
-        charging_time_min += stop["charge_time_min"]
-        estimated_cost_eur += stop["cost_eur"]
+    charging_time_min = sum(s["charge_time_min"] for s in enriched_stops)
+    estimated_cost_eur = sum(s["cost_eur"] for s in enriched_stops)
 
-    # 6. If we have stops, re-route via waypoints
-    if selected_stops:
-        stop_waypoints = [(s["lat"], s["lon"]) for s in selected_stops]
+    # 7. Перестроить маршрут через остановки
+    if enriched_stops:
+        stop_waypoints = [(s["lat"], s["lon"]) for s in enriched_stops]
         try:
             route_data = await get_route(
                 origin_lat, origin_lon,
@@ -265,14 +282,12 @@ async def plan_route(request: RouteRequest) -> RouteResult:
                 waypoints=stop_waypoints,
             )
         except Exception:
-            pass  # keep original route
+            pass
 
-    # 7. Build route steps
-    route_steps = [
-        RouteStep(**step) for step in route_data.get("steps", [])
-    ]
+    # 8. Шаги маршрута
+    route_steps = [RouteStep(**step) for step in route_data.get("steps", [])]
 
-    # 8. AI recommendation
+    # 9. AI рекомендация
     ai_text = generate_route_recommendation(
         origin=request.origin,
         destination=request.destination,
@@ -286,10 +301,9 @@ async def plan_route(request: RouteRequest) -> RouteResult:
         estimated_cost_eur=estimated_cost_eur,
     )
 
-    # 9. Build final geometry list
+    # 10. Результат
     final_geometry = coords if coords else None
 
-    # 10. Assemble result
     charging_stop_objects = [
         ChargingStop(
             name=s["name"],

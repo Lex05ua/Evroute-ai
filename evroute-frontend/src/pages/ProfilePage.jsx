@@ -24,18 +24,20 @@ const ProfilePage = () => {
   }, []);
 
   const handleSave = async () => {
-    setSaving(true); setError(''); setSaved(false);
-    try {
-      await updateMe(form);
-      refreshUser();
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setSaving(false);
-    }
-  };
+  setSaving(true); setError(''); setSaved(false);
+  try {
+    const updated = await updateMe(form);
+    // Обновляем localStorage сразу после сохранения
+    localStorage.setItem('evroute_user', JSON.stringify(updated));
+    refreshUser();
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
+  } catch (e) {
+    setError(e.message);
+  } finally {
+    setSaving(false);
+  }
+};
 
   const initials = form.full_name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2) || 'EV';
 

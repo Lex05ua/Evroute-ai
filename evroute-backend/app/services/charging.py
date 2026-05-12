@@ -45,27 +45,17 @@ def _point_on_segment(
 async def fetch_stations_along_route(
     waypoints: list[tuple[float, float]],
     search_radius_km: float = 10.0,
-    max_power_kw: float = 50.0,
+    max_power_kw: float = 22.0,
 ) -> list[dict]:
-    """
-    Fetch EV charging stations near each waypoint along the route.
-    waypoints: list of (lat, lon) sampled from the route geometry.
-    Returns deduplicated list of station dicts.
-    """
     if not settings.OPENCHARGEMAP_API_KEY:
         raise ValueError("OPENCHARGEMAP_API_KEY is not set in .env")
 
     seen_ids = set()
     stations = []
 
-    # Sample every N-th waypoint to avoid too many API calls
-    sample_step = max(1, len(waypoints) // 8)
-    sampled = waypoints[::sample_step]
-    if waypoints[-1] not in sampled:
-        sampled.append(waypoints[-1])
-
+    # Ищем около КАЖДОЙ точки маршрута, не пропускаем ни одну
     async with httpx.AsyncClient(timeout=15) as client:
-        for lat, lon in sampled:
+        for lat, lon in waypoints:
             try:
                 resp = await client.get(
                     f"{OCM_BASE}/poi/",
@@ -75,16 +65,17 @@ async def fetch_stations_along_route(
                         "longitude": lon,
                         "distance": search_radius_km,
                         "distanceunit": "km",
-                        "maxresults": 20,
+                        "maxresults": 30,
                         "compact": True,
                         "verbose": False,
                         "minpowerkw": max_power_kw,
-                        "statustypeid": 50,  # Operational only
+                        "statustypeid": 50,
                     },
                 )
                 resp.raise_for_status()
                 data = resp.json()
-            except Exception:
+            except Exception as e:
+                print(f"DEBUG OCM error at {lat:.2f},{lon:.2f}: {e}")
                 continue
 
             for s in data:
@@ -96,7 +87,6 @@ async def fetch_stations_along_route(
                 addr_info = s.get("AddressInfo", {})
                 connections = s.get("Connections", [])
 
-                # Get max power from connections
                 power_kw = 0.0
                 connection_types = []
                 for conn in connections:
@@ -111,8 +101,6 @@ async def fetch_stations_along_route(
                 if power_kw < max_power_kw:
                     continue
 
-                # Available connectors
-                status_type = s.get("StatusType", {}) or {}
                 avail = s.get("NumberOfPoints") or len(connections)
 
                 stations.append({
@@ -127,15 +115,14 @@ async def fetch_stations_along_route(
                     "lon": addr_info.get("Longitude", lon),
                     "power_kw": power_kw,
                     "total_connectors": avail,
-                    "available_connectors": max(1, avail - 1),  # OCM doesn't give real-time
+                    "available_connectors": max(1, avail - 1),
                     "operator": (s.get("OperatorInfo") or {}).get("Title", "Unknown"),
                     "connection_types": connection_types,
-                    "cost_per_kwh": 0.28,  # OCM rarely has pricing; use estimate
-                    "is_operational": status_type.get("IsUserSelectable", True),
+                    "cost_per_kwh": 0.28,
+                    "is_operational": True,
                 })
 
     return stations
-
 
 async def fetch_stations_in_bbox(
     lat_min: float, lon_min: float,
