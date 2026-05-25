@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     # External APIs
     OPENCHARGEMAP_API_KEY: str = ""
     OPENROUTESERVICE_API_KEY: str = ""
+    GROQ_API_KEY: str = ""
 
 
     # CORS

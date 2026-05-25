@@ -1,8 +1,3 @@
-"""
-OpenRouteService integration for geocoding and route calculation.
-Free tier: 2000 requests/day.
-Sign up at: https://openrouteservice.org/dev/#/signup
-"""
 import httpx
 from typing import Optional
 from app.core.config import settings
