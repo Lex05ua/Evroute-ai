@@ -1,7 +1,6 @@
 from groq import Groq
 from app.core.config import settings
 
-
 def generate_route_recommendation(
     origin: str,
     destination: str,

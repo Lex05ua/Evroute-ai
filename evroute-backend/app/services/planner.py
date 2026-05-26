@@ -144,7 +144,6 @@ def _select_stops(
         ]
 
         if not reachable:
-            # Буфер недостижим — берём просто всё что достижимо
             reachable = [
                 (km, s) for km, s in annotated
                 if current_pos_km + 5 < km <= current_pos_km + current_range

@@ -87,7 +87,6 @@ async def get_route(
             })
             step_num += 1
 
-    # Decode geometry (encoded polyline or GeoJSON)
     geometry = route.get("geometry")
 
     return {

@@ -119,32 +119,6 @@ const FullRoutePage = () => {
                 Click on markers for details · Scroll to zoom · Drag to pan
               </div>
             </div>
-
-            <div className={styles.card}>
-              <div className={styles.cardTitle}>Turn-by-Turn Directions</div>
-              <div className={styles.turnList}>
-                {directions.map((step, i) => {
-                  const isCharging = step.instruction.includes('⚡') || step.instruction.includes('Charge');
-                  return (
-                    <div key={i} className={styles.turnItem} style={isCharging ? { background: '#EFF6FF', borderRadius: '8px', padding: '8px' } : {}}>
-                      <div className={styles.turnNumber} style={isCharging ? { background: '#2563EB' } : {}}>
-                        {isCharging ? '⚡' : step.step_number}
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <div className={styles.turnText}>{step.instruction}</div>
-                        {(step.distance_km > 0 || step.duration_min > 0) && (
-                          <div className={styles.turnMeta}>
-                            {step.distance_km > 0 && `${step.distance_km.toFixed(1)} km`}
-                            {step.distance_km > 0 && step.duration_min > 0 && ' · '}
-                            {step.duration_min > 0 && `${step.duration_min.toFixed(0)} min`}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
           </div>
 
           <div>
