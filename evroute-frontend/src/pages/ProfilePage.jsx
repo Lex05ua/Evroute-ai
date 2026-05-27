@@ -27,7 +27,6 @@ const ProfilePage = () => {
   setSaving(true); setError(''); setSaved(false);
   try {
     const updated = await updateMe(form);
-    // Обновляем localStorage сразу после сохранения
     localStorage.setItem('evroute_user', JSON.stringify(updated));
     refreshUser();
     setSaved(true);

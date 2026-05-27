@@ -1,8 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* --- BUTTONS & INTERACTIVE --- */
 
-/* Главная зеленая кнопка (Start Navigation, Get Started) */
 .btnGreen, .btnPrimary { 
   background: #00C853; 
   color: white; 
@@ -29,7 +27,6 @@
   transform: translateY(0);
 }
 
-/* Кнопка "Calculate Route" (Градиент) */
 .btnCalculate { 
   background: linear-gradient(90deg, #60A5FA, #34D399); 
   color: white; 
@@ -53,7 +50,6 @@
   box-shadow: 0 4px 10px rgba(52, 211, 153, 0.3);
 }
 
-/* Кнопка "Plan Route" в шапке (Черная) */
 .navBtnBlack { 
   background: #111827; 
   color: white; 
@@ -71,7 +67,6 @@
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
-/* Белые кнопки (Back, Share, View) */
 .actionBtn, .btnBack, .btnView { 
   background: white; 
   border: 1px solid #D1D5DB; 
@@ -107,7 +102,7 @@
 .navBtnBlack { background: #111827; color: white; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-size: 14px; font-weight: 600; }
 
 
-/* --- Hero / Landing --- */
+
 .hero { 
     padding: 60px 0 80px; 
 }
@@ -115,27 +110,27 @@
 .heroContainer { 
     display: flex; 
     align-items: center; 
-    gap: 40px; /* Уменьшили дырку между текстом и фото */
+    gap: 40px;
     justify-content: space-between;
 }
 
 .heroText { 
-    flex: 1.3; /* ТЕКСТ ТЕПЕРЬ ЗАНИМАЕТ БОЛЬШЕ МЕСТА (около 60%) */
+    flex: 1.3;
     min-width: 0; 
 }
 
 .heroImage { 
-    flex: 0.8; /* КАРТИНКА ЗАНИМАЕТ МЕНЬШЕ МЕСТА (около 40%) */
+    flex: 0.8;
     display: flex;
-    justify-content: flex-end; /* Прижимаем картинку вправо */
+    justify-content: flex-end;
 }
 
-/* Настройки самой картинки */
+
 .heroImgTag {
     width: 100%;
-    max-width: 500px; /* Ограничиваем ширину, чтобы она не была гигантской */
+    max-width: 500px;
     height: auto;
-    aspect-ratio: 4/3; /* Делаем соотношение сторон приятнее */
+    aspect-ratio: 4/3;
     object-fit: cover;
     border-radius: 24px;
     box-shadow: 0 20px 40px rgba(0,0,0,0.15);
@@ -249,14 +244,14 @@
 .timelineRow { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 12px; color: #4B5563; }
 .timelineIcon { width: 16px; display: inline-block; }
 
-/* --- CLASSIC AUTH STYLES --- */
+
 .authWrapper {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: #F9FAFB; /* Светлый фон */
+    background: #F9FAFB;
     padding: 20px;
 }
 

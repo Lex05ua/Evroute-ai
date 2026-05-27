@@ -22,4 +22,4 @@ class User(Base):
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
 
-    routes: Mapped[list["Route"]] = relationship(back_populates="user", cascade="all, delete-orphan")  # noqa: F821
+    routes: Mapped[list["Route"]] = relationship(back_populates="user", cascade="all, delete-orphan")

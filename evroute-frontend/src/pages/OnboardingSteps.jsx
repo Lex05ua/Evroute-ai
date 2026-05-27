@@ -23,7 +23,7 @@ export const Onboarding1 = () => {
     );
 };
 
-// --- STEP 2 ---
+// STEP 2
 export const Onboarding2 = () => {
     const navigate = useNavigate();
     return (
@@ -51,7 +51,7 @@ export const Onboarding2 = () => {
     );
 };
 
-// --- STEP 3 ---
+//  STEP 3
 export const Onboarding3 = () => {
     const navigate = useNavigate();
     return (

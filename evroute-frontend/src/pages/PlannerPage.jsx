@@ -36,7 +36,7 @@ const PlannerPage = () => {
 
   const selectedVehicle = VEHICLES[vehicleIdx];
 
-  // Если авто совпадает с профилем — берём данные из профиля
+
   const batteryKwh = (user?.vehicle_model === selectedVehicle.label && user?.battery_capacity_kwh)
     ? user.battery_capacity_kwh
     : selectedVehicle.battery;
@@ -80,7 +80,7 @@ const PlannerPage = () => {
         <div className={styles.container}>
           <div className={styles.dashboardGrid}>
 
-            {/* ЛЕВАЯ КОЛОНКА */}
+
             <div className={styles.sidebar}>
 
               {/* Route Planning */}
@@ -182,7 +182,7 @@ const PlannerPage = () => {
                   </div>
                 </div>
 
-                {/* Индикатор что данные из профиля */}
+
                 {user?.vehicle_model === selectedVehicle.label && (
                   <div style={{
                     fontSize: '11px', color: '#16A34A', marginBottom: '8px',
@@ -226,7 +226,7 @@ const PlannerPage = () => {
               </div>
             </div>
 
-            {/* ПРАВАЯ ЧАСТЬ */}
+
             <div className={styles.mainArea}>
               {loading ? (
                 <div style={{ textAlign: 'center' }}>

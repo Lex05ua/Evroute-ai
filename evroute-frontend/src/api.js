@@ -5,7 +5,6 @@
 
 const API_BASE = '/api'; // proxied to http://localhost:8000 via vite
 
-// ---- helpers ----
 
 function getToken() {
   return localStorage.getItem('evroute_token');
@@ -34,7 +33,7 @@ async function request(path, options = {}) {
   return data;
 }
 
-// ---- AUTH ----
+// AUTH
 
 export async function register({ full_name, email, password }) {
   const data = await request('/auth/register', {
@@ -81,7 +80,7 @@ export function isAuthenticated() {
   return !!getToken();
 }
 
-// ---- ROUTE PLANNING ----
+// ROUTE PLANNING
 
 export async function planRoute(payload) {
   return request('/routes/plan', {
@@ -97,7 +96,7 @@ export async function planRouteGuest(payload) {
   });
 }
 
-// ---- HISTORY ----
+// HISTORY
 
 export async function getHistory(limit = 20, offset = 0) {
   return request(`/routes/history?limit=${limit}&offset=${offset}`);
@@ -115,13 +114,13 @@ export async function deleteRoute(id) {
   return request(`/routes/history/${id}`, { method: 'DELETE' });
 }
 
-// ---- STATIONS ----
+// STATIONS
 
 export async function getNearbyStations(lat, lon, radius_km = 10) {
   return request(`/stations/nearby?lat=${lat}&lon=${lon}&radius_km=${radius_km}`);
 }
 
-// ---- GEOCODE ----
+// GEOCODE
 
 export async function geocodeSearch(q) {
   return request(`/geocode/search?q=${encodeURIComponent(q)}`);

@@ -5,7 +5,7 @@ import styles from '../App.module.css';
 const LandingPage = () => {
   return (
     <>
-      {/* --- HEADER (Специальный для Лендинга) --- */}
+
       <header className={styles.header}>
         <div className={styles.container}>
             <div className={styles.headerContent}>
@@ -15,19 +15,18 @@ const LandingPage = () => {
                 <div className={styles.nav}>
                     <Link to="/features" className={styles.navLink}>Features</Link>
                     <Link to="/how-it-works" className={styles.navLink}>How It Works</Link>
-                    {/* Ведет на страницу Входа */}
+
                     <Link to="/login" className={styles.btnGreen}>Get Started</Link>
                 </div>
             </div>
         </div>
       </header>
 
-      {/* --- 1. HERO SECTION (Обновленный баланс) --- */}
+
       <section className={styles.hero}>
         <div className={styles.container}>
           <div className={styles.heroContainer}>
-            
-            {/* ТЕКСТ (Занимает 60% места) */}
+
             <div className={styles.heroText}>
               <div className={styles.badge}>✨ AI-Powered Route Intelligence</div>
               <h1 className={styles.heroTitle}>Plan Your Electric Journey with Confidence</h1>
@@ -36,7 +35,6 @@ const LandingPage = () => {
               </p>
               
               <div style={{display:'flex', gap:'15px', alignItems:'center'}}>
-                  {/* Ведет на Регистрацию */}
                   <Link to="/signup" className={styles.btnGreen}>Start Planning →</Link>
                   
                   {/* Статистика */}
@@ -53,7 +51,7 @@ const LandingPage = () => {
               </div>
             </div>
 
-            {/* КАРТИНКА (Занимает 40% места) */}
+
             <div className={styles.heroImage}>
                <img 
                  src="https://images.unsplash.com/photo-1593941707882-a5bba14938c7?q=80&w=1000&auto=format&fit=crop" 
@@ -66,7 +64,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* --- 2. FEATURES SECTION --- */}
+
       <section className={styles.section} style={{background: '#fff', padding: '80px 0'}}>
         <div className={styles.container}>
           <div style={{textAlign:'center', marginBottom:'60px'}}>
@@ -109,7 +107,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* --- 3. HOW IT WORKS --- */}
+      {/* --- HOW IT WORKS --- */}
       <section className={styles.section} style={{padding:'80px 0'}}>
         <div className={styles.container}>
           <div style={{textAlign:'center', marginBottom:'60px'}}>
@@ -137,7 +135,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* --- 4. CTA --- */}
+
       <section style={{background: 'linear-gradient(90deg, #2563EB 0%, #00C853 100%)', padding:'100px 0', textAlign:'center', color:'white'}}>
          <div className={styles.container}>
             <h2 style={{fontSize:'36px', marginBottom:'20px'}}>Ready to Start Your Journey?</h2>
@@ -149,7 +147,6 @@ const LandingPage = () => {
          </div>
       </section>
 
-      {/* --- 5. FOOTER --- */}
       <footer style={{background:'#111827', color:'white', padding:'80px 0 40px'}}>
            <div className={styles.container}>
               <div style={{display:'grid', gridTemplateColumns:'1.5fr 1fr 1fr 1fr', gap:'40px', borderBottom:'1px solid #374151', paddingBottom:'60px', marginBottom:'40px'}}>

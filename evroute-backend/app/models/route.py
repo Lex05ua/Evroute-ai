@@ -25,12 +25,12 @@ class Route(Base):
     arrival_battery_pct: Mapped[float] = mapped_column(Float, nullable=True)
     estimated_cost_eur: Mapped[float] = mapped_column(Float, nullable=True)
 
-    # Vehicle snapshot
+
     vehicle_model: Mapped[str] = mapped_column(String(100), nullable=True)
     battery_level_pct: Mapped[float] = mapped_column(Float, nullable=True)
     battery_capacity_kwh: Mapped[float] = mapped_column(Float, nullable=True)
 
-    # Full result stored as JSON
+
     charging_stops: Mapped[dict] = mapped_column(JSON, nullable=True)
     ai_recommendation: Mapped[str] = mapped_column(Text, nullable=True)
 
@@ -39,4 +39,4 @@ class Route(Base):
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
 
-    user: Mapped["User"] = relationship(back_populates="routes")  # noqa: F821
+    user: Mapped["User"] = relationship(back_populates="routes")

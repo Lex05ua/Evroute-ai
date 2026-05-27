@@ -36,7 +36,7 @@ async def register(data: UserRegister, db: AsyncSession = Depends(get_db)):
 @router.post("/login", response_model=TokenOut)
 async def login(data: UserRegister = None, db: AsyncSession = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()):
     """Login with email + password. Supports both JSON body and form data."""
-    email = form_data.username  # OAuth2 form uses 'username' field
+    email = form_data.username
     result = await db.execute(select(User).where(User.email == email))
     user = result.scalar_one_or_none()
 

@@ -19,7 +19,6 @@ export function AuthProvider({ children }) {
     setAuthed(false);
   }
 
-  // Sync when localStorage changes (other tabs)
   useEffect(() => {
     const handler = () => refreshUser();
     window.addEventListener('storage', handler);
