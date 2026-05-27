@@ -23,7 +23,7 @@ AI-powered EV route planning API with:
 - 🔐 JWT Authentication (register/login)
 - 🗺️ Route planning with OpenRouteService
 - ⚡ Charging stations via OpenChargeMap
-- 🤖 AI recommendations via Claude (Anthropic)
+- 🤖 AI recommendations via Groq (Llama 3.1)
 - 📋 Trip history (SQLite)
 
 ### Quick Start
