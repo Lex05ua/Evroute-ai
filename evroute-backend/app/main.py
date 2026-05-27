@@ -37,16 +37,14 @@ AI-powered EV route planning API with:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        settings.FRONTEND_URL,
+        "https://evroute-ai-web.onrender.com",
         "http://localhost:5173",
         "http://localhost:3000",
-        "https://evroute-ai-web.onrender.com",
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 app.include_router(auth.router)
 app.include_router(routes.router)
 app.include_router(stations.router)
