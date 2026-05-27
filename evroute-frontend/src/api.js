@@ -3,10 +3,7 @@
 // All backend calls go through here
 // ============================================
 
-const API_BASE = import.meta.env.VITE_API_URL
-  ? `${import.meta.env.VITE_API_URL}/api`
-  : '/api';
-
+const API_BASE = 'https://evroute-ai.onrender.com/api';
 
 function getToken() {
   return localStorage.getItem('evroute_token');
