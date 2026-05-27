@@ -3,7 +3,9 @@
 // All backend calls go through here
 // ============================================
 
-const API_BASE = '/api'; // proxied to http://localhost:8000 via vite
+const API_BASE = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : '/api';
 
 
 function getToken() {
